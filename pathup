@@ -1,0 +1,144 @@
+#!/usr/bin/perl -w
+
+use File::Spec;
+use Cwd qw(cwd);
+
+use vars qw($VERSION);
+
+$VERSION = 1.01;
+
+my ($name, $fromdir) = @ARGV;
+
+unless (defined $name) {
+	usage();
+	exit 1;
+}
+
+if ($name eq '') {
+	# --- If we don't do this, it will return '/'
+	print "Not found: ''\n";
+	exit 1;
+} else {
+	$fromdir = File::Spec->rel2abs(
+		File::Spec->canonpath(
+			$fromdir || cwd()
+		)
+	);
+}
+
+unless (-d $fromdir) {
+	print STDERR "No such starting directory: '$fromdir'";
+	exit 1;
+}
+
+my @parts = File::Spec->splitdir($fromdir);
+
+if (scalar(File::Spec->splitdir($name)) > 1) {
+	print "Ancestor name must not be a multi-part path; '$name'";
+	exit 1;
+} elsif ($name eq File::Spec->updir()) {
+	pop @parts;
+	print File::Spec->catfile(@parts), "\n";
+	exit 0;
+} elsif ($name eq File::Spec->curdir()) {
+	print File::Spec->catfile(@parts), "\n";
+	exit 0;
+} elsif ($name =~ /^-h|--help$/) {
+	help();
+	exit 0;
+} elsif (File::Spec->file_name_is_absolute($name)) {
+	if (-d $name) {
+		print "$name\n";
+	} else {
+		print "No such directory: '$name'\n";
+	}
+	exit 0;
+}
+
+do {
+	pop @parts;
+	unless (scalar @parts) {
+		print "Not found: '$name'\n";
+		exit 1;
+	}
+} until $parts[-1] eq $name;
+
+print File::Spec->catdir(@parts), "\n";
+
+sub usage {
+	print
+		"Usage: pathup dirname [ fromdir ]\n",
+		"Help:  pathup -h\n",
+		"       pathup --help\n"
+	;
+}
+
+sub help {
+	print
+		"pathup dirname [ fromdir ]\n",
+		"Find the nearest directory <dirname> that encloses fromdir.\n",
+		"The search starts with the current directory if fromdir is not specified.\n"
+	;
+}
+
+=head1 NAME
+
+pathup - find an enclosing directory
+
+=head1 SYNOPSIS
+
+pathup I<name> [ I<start> ]
+
+pathup -h
+
+pathup --help
+
+=head1 DESCRIPTION
+
+Starting from a directory I<start> (defaults to the current directory),
+look for the first (i.e., most closely enclosing) ancestor directory
+with the specified name.
+
+Searching for an ancestor named `.' simply returns the absolute path of
+the specified directory itself; searching for `..' returns its parent's
+absolute path.
+
+Searching by an absolute path name returns that same path, unless the
+path doesn't specify an existing directory.
+
+=head1 EXAMPLES
+
+  % cd /some/very/very/long/path
+  % cd `pathup very` && pwd
+  /some/very/very
+  % pathup very
+  /some/very
+  % pathup foo
+  Not found: 'foo'
+  
+  % cd /some/path/somewhere
+  % pathup .
+  /some/path/somewhere
+  % pathup ..
+  /some/path
+  % pathup /
+  /
+
+=head1 TO DO
+
+Allow use of multiple-directory names (e.g., `pathup foo/bar`)?
+
+Allow use of a grep pattern instead of a directory name.
+
+=head1 VERSION
+
+1.01
+
+=head1 COPYRIGHT
+
+Copyright 2003 Paul M. Hoffman. All rights reserved. This program is
+free software; you can redistribute it and modify it under the same
+terms as Perl itself. 
+
+=cut
+

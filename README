@@ -1,0 +1,47 @@
+pathup
+======
+
+Find an enclosing directory.
+
+
+SYNOPSIS
+--------
+
+   pathup <name> [ <start> ]
+
+See the script documentation for more information.
+
+
+INSTALLATION
+------------
+
+To install this module, type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+
+DEPENDENCIES
+------------
+
+File::Spec
+Cwd
+
+
+SEE ALSO
+--------
+
+File::Find
+File::Path
+
+
+COPYRIGHT
+---------
+
+Copyright 2003 Paul M. Hoffman < nkuitse AT cpan DOT org >.
+
+This script is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
